@@ -1,0 +1,60 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Minikube
+      uses: medyagh/setup-minikube@latest
+      with:
+        minikube-version: 'latest'
+        kubernetes-version: 'v1.23.0'
+
+    - name: Start Minikube
+      run: |
+        minikube start --driver=docker
+        kubectl config use-context minikube
+
+    - name: Set up Helm
+      run: |
+        curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+        helm repo add bitnami https://charts.bitnami.com/bitnami
+        helm repo update
+
+    - name: Deploy PostgreSQL Database
+      run: |
+        helm install my-postgres bitnami/postgresql \
+          --set postgresqlPassword=mysecretpassword \
+          --set postgresqlDatabase=mydb
+
+    - name: Deploy Backend
+      run: |
+        kubectl apply -f k8s/backend.yaml
+
+    - name: Deploy Frontend
+      run: |
+        kubectl apply -f k8s/frontend.yaml
+
+    - name: Wait for Pods to be Ready
+      run: |
+        kubectl wait --for=condition=ready pod -l app=backend --timeout=300s
+        kubectl wait --for=condition=ready pod -l app=frontend --timeout=300s
+
+    - name: Expose Services
+      run: |
+        kubectl expose deployment backend --type=NodePort --name=backend-service
+        kubectl expose deployment frontend --type=NodePort --name=frontend-service
+
+    - name: Get Service URLs
+      run: |
+        minikube service backend-service --url
+        minikube service frontend-service --url
