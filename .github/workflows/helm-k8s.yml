@@ -39,11 +39,11 @@ jobs:
 
     - name: Deploy Backend
       run: |
-        kubectl apply -f k8s/backend.yaml
+        kubectl apply -f threetierhelm/backend.yaml
 
     - name: Deploy Frontend
       run: |
-        kubectl apply -f k8s/frontend.yaml
+        kubectl apply -f threetierhelm/frontend.yaml
 
     - name: Wait for Backend Pod
       run: |
