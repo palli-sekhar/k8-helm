@@ -33,8 +33,9 @@ jobs:
     - name: Deploy PostgreSQL Database
       run: |
         helm install my-postgres bitnami/postgresql \
-          --set postgresqlPassword=mysecretpassword \
-          --set postgresqlDatabase=mydb
+          --set auth.username=cruduser \
+          --set auth.password=password \
+          --set auth.database=cruddb
 
     - name: Deploy Backend
       run: |
@@ -44,9 +45,12 @@ jobs:
       run: |
         kubectl apply -f k8s/frontend.yaml
 
-    - name: Wait for Pods to be Ready
+    - name: Wait for Backend Pod
       run: |
         kubectl wait --for=condition=ready pod -l app=backend --timeout=300s
+
+    - name: Wait for Frontend Pod
+      run: |
         kubectl wait --for=condition=ready pod -l app=frontend --timeout=300s
 
     - name: Expose Services
