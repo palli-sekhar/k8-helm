@@ -21,7 +21,7 @@ jobs:
 
     - name: Start Minikube
       run: |
-        minikube start --driver=docker
+        minikube start 
         kubectl config use-context minikube
 
     - name: Set up Helm
@@ -39,11 +39,11 @@ jobs:
 
     - name: Deploy Backend
       run: |
-        kubectl apply -f threetierhelm/backend.yaml
+        helm install backendapp backendchart
 
     - name: Deploy Frontend
       run: |
-        kubectl apply -f threetierhelm/frontend.yaml
+         helm install frontend frontendapp
 
     - name: Wait for Backend Pod
       run: |
